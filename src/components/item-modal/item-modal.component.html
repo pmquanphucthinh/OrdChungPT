@@ -1,0 +1,79 @@
+@if (item(); as currentItem) {
+<div class="fixed inset-0 bg-black/60 z-40 flex items-center justify-center p-4" (click)="onClose()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+    
+    <header class="p-4 border-b relative">
+      <h2 class="text-2xl font-bold text-center text-gray-800">{{ currentItem.name }}</h2>
+      <button (click)="onClose()" class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-gray-700 transition">
+        <i class="fa-solid fa-xmark fa-xl"></i>
+      </button>
+    </header>
+
+    <div class="flex-grow overflow-y-auto p-6">
+        <div class="flex flex-col md:flex-row gap-6">
+            @if(currentItem.image_url) {
+                <img [src]="currentItem.image_url" [alt]="currentItem.name" class="w-full md:w-1/3 h-48 md:h-auto object-cover rounded-lg">
+            }
+             <div>
+                <p class="text-gray-600">{{ currentItem.description }}</p>
+             </div>
+        </div>
+
+        <form #optionsForm="ngForm" class="mt-6 space-y-6">
+            @for(cust of currentItem.customizations; track cust.name) {
+                <div>
+                    <h3 class="font-bold text-lg text-gray-700">{{ cust.name }}
+                        @if (cust.min_permitted > 0) {
+                             <span class="text-red-500 text-sm font-normal">* bắt buộc</span>
+                        } @else {
+                             <span class="text-gray-400 text-sm font-normal">(không bắt buộc)</span>
+                        }
+                    </h3>
+                    @if (cust.max_permitted > 1) {
+                        <p class="text-sm text-gray-500 mb-2">Chọn tối đa {{ cust.max_permitted }}.</p>
+                    }
+                    <div class="space-y-2 mt-2">
+                        @for(option of cust.options; track option.id) {
+                            <label class="flex items-center justify-between p-3 rounded-lg border has-[:checked]:bg-amber-50 has-[:checked]:border-amber-500 cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                  @if (cust.max_permitted > 1) {
+                                    <input type="checkbox"
+                                           [name]="cust.name"
+                                           [value]="option.id"
+                                           [checked]="(selectedOptions()[cust.name] || []).includes(option.id)"
+                                           (change)="onCheckboxChange(cust.name, option.id, $event)"
+                                           class="form-checkbox h-5 w-5 text-amber-600 rounded focus:ring-amber-500">
+                                  } @else {
+                                    <input type="radio"
+                                          [name]="cust.name"
+                                          [value]="option.id"
+                                          [ngModel]="selectedOptions()[cust.name]"
+                                          (ngModelChange)="onRadioChange(cust.name, $event)"
+                                          [required]="cust.min_permitted > 0"
+                                          class="form-radio h-5 w-5 text-amber-600 focus:ring-amber-500">
+                                  }
+                                    <span class="font-medium text-gray-800">{{ option.name }}</span>
+                                </div>
+                                @if(option.ta_price > 0) {
+                                  <span class="text-sm text-gray-600">+ {{ option.ta_price | currency:'VND':'symbol':'1.0-0' }}</span>
+                                }
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </form>
+    </div>
+
+    <footer class="p-4 bg-gray-50 border-t flex items-center justify-between">
+      <span class="text-2xl font-bold text-gray-800">{{ totalPrice() | currency:'VND':'symbol':'1.0-0' }}</span>
+      <button (click)="onAddToCart()" 
+              [disabled]="optionsForm.invalid"
+              class="bg-amber-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-amber-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+        Thêm vào giỏ hàng
+      </button>
+    </footer>
+
+  </div>
+</div>
+}
